@@ -11,96 +11,95 @@ import javax.swing.*;
  * This class is provided for demonstration/lab purposes. It demonstrates how to
  * use the Decorator Pattern to provide validation capabilities to JTextField
  * components.
- *
+ * 
  * Compared to the Strategy version, this is slightly less flexible because the
  * decorators are all based exclusively on JTextField. For other components you
  * would need to construct new decorator classes.
- *
+ * 
  * @author Jim Lombardo
  * @version 1.01
  */
 public class MainGUI extends JFrame implements ActionListener {
+	private ValidatedJTextField txtField1;
+	private ValidatedJTextField field1;
+	private ValidatedJTextField txtField2;
+	private ValidatedJTextField field2;
+	private ValidatedJTextField txtField3;
+	private ValidatedJTextField field3;
+	private ValidatedJTextField[] textFields = new ValidatedJTextField[3];
+	private JPanel fieldPanel;
+	private JPanel btnPanel;
+	private JButton submitBtn;
+	private Container c;
 
-    private JTextField txtField1;
-    private JTextFieldValidatorDecorator field1;
-    private JTextField txtField2;
-    private JTextFieldValidatorDecorator field2;
-    private JTextField txtField3;
-    private JTextFieldValidatorDecorator field3;
-    private JTextFieldValidatorDecorator[] textFields = new JTextFieldValidatorDecorator[3];
-    private JPanel fieldPanel;
-    private JPanel btnPanel;
-    private JButton submitBtn;
-    private Container c;
+	public MainGUI() {
+		txtField1 = new SimpleValidatedTextField(10);
+		txtField1.setName("Field1");
+		field1 = new RequiredFieldDecorator(txtField1);
 
-    public MainGUI() {
+		txtField2 = new SimpleValidatedTextField(10);
+		txtField2.setName("Field2");
+		// Here we wrap a pain JTextField
+		// field2 = new NumericRangeDecorator(txtField2,20,50);
 
-        txtField1 = new JTextField(10);
-        txtField1.setName("Field1");
-        field1 = new RequiredFieldDecorator(txtField1);
+		// Here we wrap a RequiredFieldDecorator
+		ValidatedJTextFieldDecorator dField = new RequiredFieldDecorator(
+				txtField2);
+		dField.setName("Field2");
+		// field2 = new NumericRangeDecorator(dField,20,50);
+		field2 = dField;
 
-        txtField2 = new JTextField(10);
-        txtField2.setName("Field2");
-        // Here we wrap a pain JTextField
-        field2 = new NumericRangeDecorator(txtField2, 20, 50);
+		txtField3 = new SimpleValidatedTextField(10);
+		txtField3.setName("Field3");
+		// field3 = new DateRangeDecorator(txtField3, "8/1/2007", "12/1/2007");
+		field3 = new RequiredFieldDecorator(txtField3);
 
-        // Here we wrap a RequiredFieldDecorator
-        JTextFieldValidatorDecorator dField = new RequiredFieldDecorator((JTextFieldValidatorDecorator) txtField2);
-        dField.setName("Field2");
-        field2 = new NumericRangeDecorator(dField, 20, 50);
+		textFields[0] = field1;
+		textFields[1] = field2;
+		textFields[2] = field3;
 
-        txtField3 = new JTextField(10);
-        txtField3.setName("Field3");
-        field3 = new DateRangeDecorator(txtField3, "8/1/2007", "12/1/2007");
+		c = this.getContentPane();
 
-        textFields[0] = field1;
-        textFields[1] = field2;
-        textFields[2] = field3;
+		// ignore this, we're just building the gui...
+		fieldPanel = new JPanel();
+		// rows,columns
+		fieldPanel.setLayout(new GridLayout(3, 2));
+		fieldPanel.add(new JLabel("Required entry:"));
+		fieldPanel.add(field1);
+		fieldPanel.add(new JLabel("Number range (20-50):"));
+		fieldPanel.add(field2);
+		fieldPanel.add(new JLabel("Date range (8/1/2007 - 12/1/2007:"));
+		fieldPanel.add(field3);
+		c.add(fieldPanel, BorderLayout.CENTER);
 
-        c = this.getContentPane();
+		submitBtn = new JButton("Submit");
+		submitBtn.addActionListener(this);
+		btnPanel = new JPanel();
+		btnPanel.add(submitBtn);
+		c.add(btnPanel, BorderLayout.SOUTH);
 
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setBounds(50, 50, 425, 150);
+		this.setVisible(true);
+	}
 
-        // ignore this, we're just building the gui...
-        fieldPanel = new JPanel();
-        // rows,columns
-        fieldPanel.setLayout(new GridLayout(3, 2));
-        fieldPanel.add(new JLabel("Required entry:"));
-        fieldPanel.add(field1);
-        fieldPanel.add(new JLabel("Number range (20-50):"));
-        fieldPanel.add(field2);
-        fieldPanel.add(new JLabel("Date range (8/1/2007 - 12/1/2007:"));
-        fieldPanel.add(field3);
-        c.add(fieldPanel, BorderLayout.CENTER);
+	// Processing the button click event ...
+	public void actionPerformed(ActionEvent e) {
+		boolean allValid = true; // sentinel value
 
-        submitBtn = new JButton("Submit");
-        submitBtn.addActionListener(this);
-        btnPanel = new JPanel();
-        btnPanel.add(submitBtn);
-        c.add(btnPanel, BorderLayout.SOUTH);
+		// Polymorphic validation ... easily reused.
+		for (int i = 0; i < textFields.length; i++) {
+			if (!textFields[i].isValidInput()) {
+				JOptionPane.showMessageDialog(null, textFields[i].getName(),
+						"Validation Error", JOptionPane.ERROR_MESSAGE);
+				allValid = false;
+			}
+		}
 
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setBounds(50, 50, 425, 150);
-        this.setVisible(true);
-    }
+		if (allValid) {
+			JOptionPane.showMessageDialog(null, "Validation Succeeded",
+					"Validation Success", JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
 
-    // Processing the button click event ...
-    public void actionPerformed(ActionEvent e) {
-        boolean allValid = true;  // sentinel value
-
-        // Polymorphic validation ... easily reused.
-        for (int i = 0; i < textFields.length; i++) {
-            if (!textFields[i].isValidInput()) {
-                JOptionPane.showMessageDialog(
-                        null, textFields[i].getErrorMsg(),
-                        "Validation Error", JOptionPane.ERROR_MESSAGE);
-                allValid = false;
-            }
-        }
-
-        if (allValid) {
-            JOptionPane.showMessageDialog(
-                    null, "Validation Succeeded",
-                    "Validation Success", JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
 }
